@@ -1,0 +1,5 @@
+[TYPECHECK]
+generated-members=cv2.*
+
+[TYPECHECK]
+ignored-modules=cv2
