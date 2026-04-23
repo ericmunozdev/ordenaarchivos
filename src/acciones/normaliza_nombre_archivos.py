@@ -1,4 +1,4 @@
-"""Modulo que permite normalizar el nombre de los archivos."""
+"""Normaliza el nombre de los archivos."""
 
 import os
 import re
@@ -10,7 +10,7 @@ def transformar_texto(texto, formato):
     """Aplica el estilo de Case seleccionado al cuerpo del nombre del archivo."""
 
     # Extraemos solo palabras ignorando guiones bajos o puntos internos
-    palabras = re.findall(r"[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\-]+", texto.lower())
+    palabras = re.findall(r"[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\-\[\]]+", texto.lower())
 
     if not palabras:
         return texto
@@ -58,15 +58,22 @@ def normaliza_nombre_archivos(rutadirectorio, formato):
 
         nuevo_nombre = f"{nombre_base}{extension}"
 
-        if archivo.lower() != nuevo_nombre.lower():
+        if archivo != nuevo_nombre:
             try:
-                os.rename(os.path.join(rutadirectorio, archivo), os.path.join(rutadirectorio, nuevo_nombre))
+                os.rename(
+                    os.path.join(rutadirectorio, archivo),
+                    os.path.join(rutadirectorio, nuevo_nombre),
+                )
                 print(f"{archivo}  --->  {nuevo_nombre}")
             except Exception as e:
-                os.rename(os.path.join(rutadirectorio, archivo), os.path.join(rutadirectorio, f"_{random.random()}_{nuevo_nombre}"))
+                os.rename(
+                    os.path.join(rutadirectorio, archivo),
+                    os.path.join(rutadirectorio, f"_{random.random()}_{nuevo_nombre}"),
+                )
                 print(f"Error ---> {e}")
 
         listado.append(nombre_base)
+
 
 def ejecutar(rutadirectorio):
     """Ejecuta la funcion principal."""
