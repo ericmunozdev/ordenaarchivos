@@ -6,7 +6,8 @@ from PIL import Image
 import imagehash
 from collections import defaultdict
 
-VIDEO_EXTENSIONS = ('.mp4', '.avi', '.mkv', '.mov')
+VIDEO_EXTENSIONS = (".mp4", ".avi", ".mkv", ".mov")
+
 
 def get_first_frame(video_path):
     """Obtiene el primer frame de un video como imagen PIL."""
@@ -21,10 +22,12 @@ def get_first_frame(video_path):
     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     return Image.fromarray(frame_rgb)
 
+
 def generate_phash(image):
     """Genera un hash perceptual (phash) para la imagen."""
 
     return imagehash.phash(image)
+
 
 def collect_video_data(rutadirectorio):
     """Recopila datos de los videos."""
@@ -45,14 +48,12 @@ def collect_video_data(rutadirectorio):
         phash = str(generate_phash(frame))
         size = os.path.getsize(video_path)
 
-        data.append({
-            "filename": filename,
-            "path": video_path,
-            "hash": phash,
-            "size": size
-        })
+        data.append(
+            {"filename": filename, "path": video_path, "hash": phash, "size": size}
+        )
 
     return data
+
 
 def renombra_videos_repetidos(rutadirectorio):
     """Renombra videos repetidos."""
@@ -76,7 +77,9 @@ def renombra_videos_repetidos(rutadirectorio):
         base_name, ext = os.path.splitext(leader["filename"])
 
         # El líder mantiene su nombre
-        rename_map.append((leader["path"], os.path.join(rutadirectorio, leader["filename"])))
+        rename_map.append(
+            (leader["path"], os.path.join(rutadirectorio, leader["filename"]))
+        )
 
         # Renombrar los demás
         for idx, item in enumerate(items_sorted[1:], start=1):
@@ -103,9 +106,11 @@ def renombra_videos_repetidos(rutadirectorio):
 
     print("Renombrado finalizado.")
 
+
 def ejecutar(rutadirectorio):
     """Ejecuta la funcion principal."""
     renombra_videos_repetidos(rutadirectorio)
+
 
 if __name__ == "__main__":
     directorio = input("Ingrese el directorio: ").strip()
