@@ -24,6 +24,7 @@ src/
 │   ├── separa_archivos_carpetas.py
 │   ├── reemplaza_nombre_archivos.py
 │   ├── obtiene_texto_archivos.py
+│   ├── renombra_imagenes_fecha.py
 │   ├── renombra_videos_repetidos.py
 │   └── renombra_musica_metadata.py
 └── utils/
@@ -39,6 +40,7 @@ src/
 | `separa_archivos_carpetas` | Agrupa los archivos en carpetas de N archivos, nombradas con timestamp. |
 | `reemplaza_nombre_archivos` | Reemplaza texto en los nombres de los archivos evitando colisiones. |
 | `obtiene_texto_archivos` | Extrae el texto de todos los archivos a un `output.txt` (soporta UTF-8/latin-1 y omite binarios). |
+| `renombra_imagenes_fecha` | Renombra imágenes a `YYYYMMDD_hhmmss.ext` (extensión en minúscula) usando la fecha más antigua del archivo, con sufijo `_1`, `_2`, etc. si hay colisión. |
 | `renombra_videos_repetidos` | Detecta videos duplicados comparando el hash perceptual del primer frame y les agrega `_1`, `_2`, etc. |
 | `renombra_musica_metadata` | Renombra MP3 concatenando al nombre los tags del archivo (título, artista, año, género) con `mutagen`. |
 
