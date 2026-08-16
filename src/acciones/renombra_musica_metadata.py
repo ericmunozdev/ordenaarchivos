@@ -13,6 +13,7 @@ from mutagen.easyid3 import EasyID3
 
 
 MUSIC_EXTENSIONS = (".mp3",)
+ERROR_PREFIX = "_error_"
 
 
 def extrae_metadata_con_tags(ruta_archivo):
@@ -67,14 +68,16 @@ def generar_nombre_archivo(nombre_original, metadata, extension):
     ]
 
     partes = [nombre_base] + [
-        str(campo).strip() for campo in campos if str(campo).strip()
+        str(campo).strip()
+        for campo in campos
+        if str(campo).strip() and "desconocido" not in str(campo).lower()
     ]
 
     nuevo_nombre = limpiar_nombre_archivo(" ".join(partes))
     return f"{nuevo_nombre}{extension.lower()}"
 
 
-def obtener_nombre_unico(ruta_carpeta, nombre):
+def obtener_nombre_unico(ruta_carpeta, nombre, archivo=None):
     """Devuelve un nombre de archivo que no exista en la carpeta."""
 
     nombre_path = Path(nombre)
@@ -83,14 +86,40 @@ def obtener_nombre_unico(ruta_carpeta, nombre):
     contador = 1
 
     while (ruta_carpeta / nombre).exists():
+        if (
+            archivo is not None
+            and (ruta_carpeta / nombre).resolve() == archivo.resolve()
+        ):
+            break
+
         nombre = f"{base}_{contador}{ext}"
         contador += 1
 
     return nombre
 
 
+def marcar_archivo_error(ruta_carpeta, archivo):
+    """Antepone '_error_' al nombre del archivo para detectarlo visualmente."""
+
+    nombre_error = obtener_nombre_unico(
+        ruta_carpeta, f"{ERROR_PREFIX}{archivo.name}", archivo
+    )
+
+    try:
+        archivo.rename(ruta_carpeta / nombre_error)
+        print(f"[ERROR MARK] {archivo.name} -> {nombre_error}")
+        return nombre_error
+    except Exception as e:
+        print(f"No se pudo marcar como error '{archivo.name}': {e}")
+        return None
+
+
 def procesar_archivo(file_path: Path):
-    """Procesa un archivo: obtiene metadata, genera el nuevo nombre y renombra."""
+    """Procesa un archivo: obtiene metadata, genera el nuevo nombre y renombra.
+
+    Retorna ("ok", nombre_original, nuevo_nombre) en éxito o
+    ("error", nombre_original, mensaje) si el renombrado falla.
+    """
 
     original_name = file_path.name
     print(f"\nProcesando: {original_name}")
@@ -99,15 +128,35 @@ def procesar_archivo(file_path: Path):
         metadata = extrae_metadata_con_tags(file_path)
         extension = file_path.suffix
         nuevo_nombre = generar_nombre_archivo(original_name, metadata, extension)
-        nuevo_nombre = obtener_nombre_unico(file_path.parent, nuevo_nombre)
+        nuevo_nombre = obtener_nombre_unico(file_path.parent, nuevo_nombre, file_path)
 
         nuevo_path = file_path.parent / nuevo_nombre
 
-        os.rename(file_path, nuevo_path)
+        if nuevo_nombre != original_name:
+            os.rename(file_path, nuevo_path)
+
         print(f"[OK] {original_name} -> {nuevo_nombre}")
+        return ("ok", original_name, nuevo_nombre)
 
     except Exception as e:
+        marcar_archivo_error(file_path.parent, file_path)
         print(f"[ERROR] {original_name}: {e}")
+        return ("error", original_name, str(e))
+
+
+def escribir_log_errores(ruta, errores):
+    """Escribe el archivo de errores en el directorio."""
+
+    ruta_log = ruta / "errores.txt"
+
+    try:
+        with open(ruta_log, "w", encoding="utf-8") as log:
+            for original, mensaje in errores:
+                log.write(f"{original}: {mensaje}\n")
+
+        print(f"Log de errores: {ruta_log}")
+    except Exception as e:
+        print(f"No se pudo escribir el log de errores: {e}")
 
 
 def renombra_musica_metadata(rutadirectorio):
@@ -116,11 +165,21 @@ def renombra_musica_metadata(rutadirectorio):
     ruta = Path(rutadirectorio)
     archivos = [f for f in ruta.iterdir() if f.is_file()]
 
+    errores = []
+
     for archivo in archivos:
         if archivo.suffix.lower() not in MUSIC_EXTENSIONS:
             continue
 
-        procesar_archivo(archivo)
+        if archivo.name.startswith(ERROR_PREFIX):
+            continue
+
+        estado = procesar_archivo(archivo)
+
+        if estado[0] == "error":
+            errores.append((estado[1], estado[2]))
+
+    escribir_log_errores(ruta, errores)
 
     print("\nProceso finalizado.")
 
