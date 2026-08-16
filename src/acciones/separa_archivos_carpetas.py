@@ -1,8 +1,13 @@
 """Separa los archivos en carpetas."""
 
 import shutil
+import sys
 from datetime import datetime
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from utils.directorios import pedir_directorio
 
 
 def generar_nombre_carpeta():
@@ -69,5 +74,5 @@ def ejecutar(rutadirectorio):
 
 
 if __name__ == "__main__":
-    directorio = input("Ingrese el directorio: ").strip()
+    directorio = pedir_directorio()
     ejecutar(directorio)

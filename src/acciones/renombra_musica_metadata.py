@@ -2,7 +2,12 @@
 
 import os
 import re
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from utils.directorios import pedir_directorio
 
 from mutagen.easyid3 import EasyID3
 
@@ -127,5 +132,5 @@ def ejecutar(rutadirectorio):
 
 
 if __name__ == "__main__":
-    directorio = input("Ingrese el directorio: ").strip()
+    directorio = pedir_directorio()
     ejecutar(directorio)

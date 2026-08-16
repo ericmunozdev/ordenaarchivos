@@ -1,7 +1,12 @@
 """Normaliza el nombre de los archivos."""
 
 import re
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from utils.directorios import pedir_directorio
 
 
 def transformar_texto(texto, formato):
@@ -88,5 +93,5 @@ def ejecutar(rutadirectorio):
 
 
 if __name__ == "__main__":
-    directorio = input("Ingrese el directorio: ").strip()
+    directorio = pedir_directorio()
     ejecutar(directorio)

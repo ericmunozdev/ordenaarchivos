@@ -4,6 +4,8 @@ import pkgutil
 import importlib
 import acciones
 
+from utils.directorios import pedir_directorio
+
 ACCIONES = {}
 
 def cargar_acciones():
@@ -34,7 +36,7 @@ def main():
     mostrar_menu()
     opcion = input("\nOpción: ").strip()
 
-    directorio = input("Ingrese el directorio: ").strip()
+    directorio = pedir_directorio()
 
     try:
         opcion = int(opcion) - 1

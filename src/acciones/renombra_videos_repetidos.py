@@ -1,10 +1,15 @@
 """Renombra videos repetidos usando el hash de la primera imagen como referencia."""
 
+import sys
 import cv2
 import imagehash
 from PIL import Image
 from collections import defaultdict
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from utils.directorios import pedir_directorio
 
 VIDEO_EXTENSIONS = (".mp4", ".avi", ".mkv", ".mov")
 
@@ -123,5 +128,5 @@ def ejecutar(rutadirectorio):
 
 
 if __name__ == "__main__":
-    directorio = input("Ingrese el directorio: ").strip()
+    directorio = pedir_directorio()
     renombra_videos_repetidos(directorio)
