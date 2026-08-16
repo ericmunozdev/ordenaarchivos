@@ -1,9 +1,8 @@
 """Separa los archivos en carpetas."""
 
-import os
-import time
 import shutil
 from datetime import datetime
+from pathlib import Path
 
 
 def generar_nombre_carpeta():
@@ -13,39 +12,54 @@ def generar_nombre_carpeta():
     return now.strftime("%Y%m%d%H%M%S") + f".{int(now.microsecond / 1000):03d}"
 
 
+def obtener_nombre_carpeta_unico(ruta, nombre):
+    """Devuelve un nombre de carpeta que no exista."""
+
+    contador = 1
+
+    while (ruta / nombre).exists():
+        nombre = f"{nombre}_{contador}"
+        contador += 1
+
+    return nombre
+
+
 def separa_archivos_carpetas(rutadirectorio, cantidad):
-    os.chdir(rutadirectorio)
-    archivos = [f for f in os.listdir() if os.path.isfile(f)]
+    """Separa los archivos del directorio en carpetas de N archivos."""
+
+    ruta = Path(rutadirectorio)
+    archivos = [f for f in ruta.iterdir() if f.is_file()]
 
     for i in range(0, len(archivos), cantidad):
         lote = archivos[i : i + cantidad]
 
-        nombre_carpeta = generar_nombre_carpeta()
-        ruta_carpeta = os.path.join(rutadirectorio, nombre_carpeta)
+        nombre_carpeta = obtener_nombre_carpeta_unico(
+            ruta, generar_nombre_carpeta()
+        )
+        ruta_carpeta = ruta / nombre_carpeta
 
-        os.makedirs(ruta_carpeta, exist_ok=True)
+        ruta_carpeta.mkdir()
         print(f"Creando carpeta: {ruta_carpeta}")
 
         for archivo in lote:
             try:
-                origen = os.path.join(rutadirectorio, archivo)
-                destino = os.path.join(ruta_carpeta, archivo)
-                shutil.move(origen, destino)
-                print(f"Moviendo '{archivo}' a '{ruta_carpeta}'")
+                shutil.move(archivo, ruta_carpeta / archivo.name)
+                print(f"Moviendo '{archivo.name}' a '{ruta_carpeta}'")
             except Exception as e:
-                print(f"Error al mover '{archivo}': {e}")
-
-        # Pequeña pausa para evitar colisiones de timestamp
-        time.sleep(0.01)
+                print(f"Error al mover '{archivo.name}': {e}")
 
 
 def ejecutar(rutadirectorio):
     """Ejecuta la funcion principal."""
 
     print("\nIngrese la cantidad de archivos por carpeta:")
-    cantidad = input("\nCantidad: ")
+    cantidad = input("\nCantidad: ").strip()
 
-    cantidad = int(cantidad)
+    try:
+        cantidad = int(cantidad)
+    except ValueError:
+        print("La cantidad debe ser un número.")
+        return
 
     if cantidad <= 0:
         print("La cantidad debe ser un número positivo.")
