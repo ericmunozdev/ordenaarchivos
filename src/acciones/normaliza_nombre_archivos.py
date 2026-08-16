@@ -1,8 +1,6 @@
 """Normaliza el nombre de los archivos."""
 
-import os
 import re
-import random
 from pathlib import Path
 
 
@@ -29,8 +27,7 @@ def transformar_texto(texto, formato):
     elif formato == "6":  # kebab-case
         return "-".join(p for p in palabras)
     elif formato == "7":  # Sentence case (Primera letra total en mayúscula)
-        frase = " ".join(p for p in palabras)
-        return frase.capitalize()
+        return " ".join(p for p in palabras).capitalize()
     elif formato == "8":  # Title Case (Primera letra de cada palabra)
         return " ".join(p.capitalize() for p in palabras)
     else:
@@ -38,41 +35,35 @@ def transformar_texto(texto, formato):
 
 
 def normaliza_nombre_archivos(rutadirectorio, formato):
+    """Normaliza el nombre de todos los archivos del directorio."""
 
-    os.chdir(rutadirectorio)
-    archivos = [f for f in os.listdir() if os.path.isfile(f)]
-    # archivos_limpios = [re.sub(r'\s+', ' ', os.path.splitext(f)[0]).strip() for f in archivos]
+    ruta = Path(rutadirectorio)
+    archivos = [f for f in ruta.iterdir() if f.is_file()]
 
-    listado = []
+    # Nombres ocupados para evitar colisiones
+    ocupados = {f.name for f in archivos}
 
     for archivo in archivos:
-        path_aux = Path(archivo)
-        nombre_sin_ext = path_aux.stem
-        extension = path_aux.suffix
-
-        nombre_base = transformar_texto(nombre_sin_ext, formato)
-        contador = listado.count(nombre_base)
-
-        if contador > 0:
-            nombre_base = f"{nombre_base}_{contador}"
+        nombre_base = transformar_texto(archivo.stem, formato)
+        extension = archivo.suffix
 
         nuevo_nombre = f"{nombre_base}{extension}"
+        contador = 1
 
-        if archivo != nuevo_nombre:
-            try:
-                os.rename(
-                    os.path.join(rutadirectorio, archivo),
-                    os.path.join(rutadirectorio, nuevo_nombre),
-                )
-                print(f"{archivo}  --->  {nuevo_nombre}")
-            except Exception as e:
-                os.rename(
-                    os.path.join(rutadirectorio, archivo),
-                    os.path.join(rutadirectorio, f"_{random.random()}_{nuevo_nombre}"),
-                )
-                print(f"Error ---> {e}")
+        while nuevo_nombre in ocupados and nuevo_nombre != archivo.name:
+            nuevo_nombre = f"{nombre_base}_{contador}{extension}"
+            contador += 1
 
-        listado.append(nombre_base)
+        if nuevo_nombre == archivo.name:
+            continue
+
+        try:
+            archivo.rename(ruta / nuevo_nombre)
+            ocupados.discard(archivo.name)
+            ocupados.add(nuevo_nombre)
+            print(f"{archivo.name}  --->  {nuevo_nombre}")
+        except Exception as e:
+            print(f"Error al renombrar '{archivo.name}': {e}")
 
 
 def ejecutar(rutadirectorio):
@@ -88,6 +79,10 @@ def ejecutar(rutadirectorio):
     print("7. Sentence case")
     print("8. Title Case")
     formato = input("\nOpción (1-8): ")
+
+    if formato not in ["1", "2", "3", "4", "5", "6", "7", "8"]:
+        print("Opción no válida.")
+        return
 
     normaliza_nombre_archivos(rutadirectorio, formato)
 
