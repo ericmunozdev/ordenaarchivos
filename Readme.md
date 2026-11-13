@@ -1,147 +1,293 @@
 # OrdenaArchivos
 
-Herramienta CLI en Python para **organizar y renombrar archivos de forma masiva** dentro de un directorio: normalizar nombres, reemplazar texto, separar en carpetas, detectar duplicados, extraer texto o renombrar música según sus tags.
+![Python](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)
+![Black](https://img.shields.io/badge/code%20style-Black-000000)
+![Pylint](https://img.shields.io/badge/lint-Pylint-1F6FEB)
+![Plataforma](https://img.shields.io/badge/plataforma-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
 
-## ¿Qué hace?
+Herramienta CLI desarrollada en **Python** para organizar y renombrar archivos de forma masiva dentro de un directorio. Reúne en un solo menú interactivo acciones para normalizar nombres, reemplazar texto, agrupar archivos en carpetas, detectar duplicados, extraer texto y renombrar imágenes, videos y música a partir de sus datos.
 
-- Se elige una **acción** desde un menú interactivo.
-- Se indica el **directorio** a procesar (se valida que exista).
-- La acción recorre los archivos del directorio y los modifica según su propósito.
-
-## Arquitectura
-
-El proyecto usa una arquitectura de **plugins**:
-
-- `src/main.py` escanea dinámicamente el paquete `acciones/` con `pkgutil` y arma el menú.
-- Cada módulo de `acciones/` es **independiente**: expone una función `ejecutar(rutadirectorio)` y, además, puede ejecutarse por separado (tiene su propio bloque `if __name__ == "__main__"`).
-- `src/utils/directorios.py` centraliza la **validación reutilizable del directorio** (`validar_directorio` / `pedir_directorio`), usada tanto por `main.py` como por cada acción.
-
-```
-src/
-├── main.py                            # Punto de entrada (menú)
-├── acciones/                          # Paquete de plugins (cada uno es una acción)
-│   ├── normaliza_nombre_archivos.py
-│   ├── separa_archivos_carpetas.py
-│   ├── reemplaza_nombre_archivos.py
-│   ├── obtiene_texto_archivos.py
-│   ├── renombra_imagenes_fecha.py
-│   ├── renombra_videos_repetidos.py
-│   └── renombra_musica_metadata.py
-└── utils/
-    ├── __init__.py
-    └── directorios.py                 # Validación del directorio
-```
-
-## Acciones disponibles
-
-| Acción | Qué hace |
-|---|---|
-| `normaliza_nombre_archivos` | Cambia el "case" de los nombres (minúsculas, MAYÚSCULAS, camelCase, PascalCase, snake_case, kebab-case, Sentence/Title case) evitando colisiones. |
-| `separa_archivos_carpetas` | Agrupa los archivos en carpetas de N archivos, nombradas con timestamp. |
-| `reemplaza_nombre_archivos` | Reemplaza texto en los nombres de los archivos evitando colisiones. |
-| `obtiene_texto_archivos` | Extrae el texto de todos los archivos a un `output.txt` (soporta UTF-8/latin-1 y omite binarios). |
-| `renombra_imagenes_fecha` | Renombra imágenes a `YYYYMMDD_hhmmss.ext` (extensión en minúscula) usando la fecha más antigua del archivo, con sufijo `_1`, `_2`, etc. si hay colisión. |
-| `renombra_videos_repetidos` | Detecta videos duplicados comparando el hash perceptual del primer frame y les agrega `_1`, `_2`, etc. |
-| `renombra_musica_metadata` | Renombra MP3 concatenando al nombre los tags del archivo (título, artista, año, género) con `mutagen`. |
-
-## Cómo usar
-
-### Modo menú (recomendado)
-
-```
-python src/main.py
-```
-
-Elige la acción, ingresa el directorio y sigue las instrucciones de cada acción.
-
-### Modo directo (ejecutar una acción sola)
-
-```
-python src/acciones/normaliza_nombre_archivos.py
-```
-
-Cada acción pide el directorio por consola. Como se ejecuta fuera del paquete, agrega la carpeta `src/` a `sys.path` para importar `utils.directorios`.
-
-## Detalles de implementación
-
-- **Carga dinámica**: `main.py` importa cada módulo de `acciones/` y registra los que tengan `ejecutar`.
-- **Validación del directorio**: `pedir_directorio()` repite la pregunta hasta obtener una ruta válida (evita que una ruta inexistente rompa el flujo).
-- **Sin `os.chdir`**: las acciones trabajan con `pathlib.Path` y rutas absolutas, evitando estado global compartido.
-- **Evitan colisiones**: al renombrar/mover archivos se controlan los nombres ya ocupados para no sobrescribir nada.
-
-## Dependencias
-
-- Entorno virtual en `env/` y dependencias fijadas en `requirements.txt` (entre otras: `mutagen`, `opencv-python`, `Pillow`, `ImageHash`).
-- Nota: `requirements.txt` está guardado en **UTF-16 (Unicode)**. Si `pip install -r requirements.txt` falla por codificación, reconvierte el archivo a UTF-8.
-- Para formatear el código se usa **Black Formatter**.
+El objetivo del proyecto es automatizar tareas de mantención de archivos que suelen hacerse a mano, aplicando una arquitectura de plugins que permite agregar nuevas acciones sin modificar el punto de entrada.
 
 ---
 
-# Preparar el ambiente para desarrollo
+## Características
 
-**Notas**
+- Menú interactivo que descubre las acciones disponibles de forma automática.
+- Arquitectura de plugins: cada acción es un módulo independiente y ejecutable por separado.
+- Validación reutilizable del directorio antes de procesar.
+- Protección contra colisiones: nunca sobrescribe archivos existentes.
+- Procesamiento por lotes y trabajo con rutas absolutas mediante `pathlib`.
+- Extracción de texto con detección de archivos binarios y soporte UTF-8/latin-1.
+- Detección de videos duplicados mediante hash perceptual del primer frame.
+- Renombrado de música a partir de sus etiquetas ID3.
+- Ejecución multiplataforma (Windows, Linux y macOS).
 
-Para formatear el código en python usar: Black Formatter
+---
 
-## PIP
+## Stack tecnológico
 
-Instalar y/o actualizar pip
-```
-python.exe -m pip install --upgrade pip
-```
+| Tecnología | Uso |
+|---|---|
+| Python 3.10+ | Lenguaje y ejecución de la CLI |
+| `pathlib` / `shutil` | Manipulación de rutas y archivos |
+| OpenCV (`opencv-python`) | Lectura del primer frame de los videos |
+| Pillow | Conversión de frames a imágenes |
+| ImageHash | Hash perceptual para detectar videos repetidos |
+| Mutagen | Lectura de metadatos ID3 de archivos MP3 |
+| Black | Formato consistente del código |
+| Pylint | Análisis estático (configurado en `.pylintrc`) |
 
-Listar los modulos existentes
-```
-pip list
-```
+---
 
-Listar los modulos fuera de fecha
-```
-pip list --outdated
-```
+## Arquitectura
 
-En caso de querer desinstalar
-```
-pip freeze > modulos.txt
-pip uninstall -r modulos.txt -y
-pip list
+El proyecto utiliza una arquitectura de **plugins**. `src/main.py` escanea el paquete `acciones/` con `pkgutil`, importa cada módulo y registra aquellos que exponen una función `ejecutar(rutadirectorio)`.
 
-rm modulos.txt
-```
-
-## Entorno virtual
-
-Verificar la versión actual
-```
-python --version
-```
-
-Instalar el entorno virtual
-```
-pip install virtualenv
-```
-
-Crear el entorno virtual
-```
-virtualenv -p python3 env
+```mermaid
+flowchart LR
+    CLI[python src/main.py] --> Loader[Cargador de acciones]
+    Loader -->|pkgutil + importlib| Plugins[src/acciones/*]
+    Loader --> Menu[Menú interactivo]
+    Menu --> Selected[Acción seleccionada]
+    Selected --> Dir[utils.directorios]
+    Dir --> FS[(Directorio de archivos)]
+    Selected --> Process[Renombrar / mover / extraer]
 ```
 
-Activar el entorno virtual
+### Responsabilidades
+
+| Componente | Responsabilidad |
+|---|---|
+| `src/main.py` | Punto de entrada. Carga las acciones, muestra el menú y delega la ejecución. |
+| `src/acciones/` | Paquete de plugins. Cada módulo implementa una acción concreta y expone `ejecutar(rutadirectorio)`. |
+| `src/utils/directorios.py` | Validación reutilizable del directorio (`validar_directorio` / `pedir_directorio`). |
+
+### Flujo de ejecución
+
+```text
+python src/main.py
+        │
+        ▼
+cargar_acciones()  ──►  pkgutil.iter_modules(acciones)
+        │
+        ▼
+mostrar_menu()  ──►  pedir_directorio()  ──►  validar_directorio()
+        │
+        ▼
+accion.ejecutar(directorio)
+        │
+        ▼
+renombrar / mover / extraer texto
 ```
+
+1. `main.py` registra las acciones disponibles y arma el menú.
+2. El usuario elige una opción e ingresa un directorio válido.
+3. La acción seleccionada recorre los archivos y aplica su lógica.
+4. Cada acción puede ejecutarse también de forma directa, sin pasar por el menú.
+
+---
+
+## Acciones disponibles
+
+| Acción | Descripción |
+|---|---|
+| `normaliza_nombre_archivos` | Cambia el estilo de los nombres: minúsculas, MAYÚSCULAS, camelCase, PascalCase, snake_case, kebab-case, Sentence case o Title Case. |
+| `reemplaza_nombre_archivos` | Reemplaza un texto por otro en los nombres de los archivos. |
+| `separa_archivos_carpetas` | Agrupa los archivos en carpetas de N archivos, nombradas con timestamp. |
+| `obtiene_texto_archivos` | Extrae el contenido de los archivos a un `output.txt`, omitiendo binarios. |
+| `renombra_imagenes_fecha` | Renombra imágenes a `YYYYMMDD_hhmmss.ext` usando la fecha más antigua del archivo. |
+| `renombra_videos_repetidos` | Detecta videos duplicados comparando el hash perceptual del primer frame y agrega sufijos `_1`, `_2`, etc. |
+| `renombra_musica_metadata` | Renombra MP3 agregando al nombre los tags título, artista, año y género. |
+
+### Detalles relevantes
+
+- **Colisiones:** al renombrar o mover archivos se verifica que el nombre destino no exista; de ser necesario se agrega un contador (`_1`, `_2`, ...).
+- **Imágenes:** se consideran las extensiones `.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.webp`, `.tiff`, `.tif` y `.heic`.
+- **Videos:** se consideran las extensiones `.mp4`, `.avi`, `.mkv` y `.mov`. El archivo de mayor tamaño conserva su nombre y los demás se renombran a partir de él.
+- **Música:** los archivos que fallan al procesarse se marcan con el prefijo `_error_` y se registran en `errores.txt`.
+- **Texto:** si un archivo no se puede leer como UTF-8 se intenta con latin-1; los archivos con bytes nulos se omiten.
+
+---
+
+## Estructura del repositorio
+
+```text
+ordenaarchivos/
+├── src/
+│   ├── main.py                            # Punto de entrada (menú)
+│   ├── acciones/                          # Plugins de acciones
+│   │   ├── __init__.py
+│   │   ├── normaliza_nombre_archivos.py
+│   │   ├── reemplaza_nombre_archivos.py
+│   │   ├── separa_archivos_carpetas.py
+│   │   ├── obtiene_texto_archivos.py
+│   │   ├── renombra_imagenes_fecha.py
+│   │   ├── renombra_videos_repetidos.py
+│   │   └── renombra_musica_metadata.py
+│   └── utils/
+│       ├── __init__.py
+│       └── directorios.py                 # Validación del directorio
+├── .gitignore
+├── .pylintrc
+├── requirements.txt
+└── Readme.md
+```
+
+---
+
+## Puesta en marcha
+
+### Requisitos
+
+- [Python](https://www.python.org/downloads/) 3.10 o superior (probado con 3.13).
+- `pip` actualizado.
+
+### 1. Clonar el repositorio
+
+```bash
+git clone https://github.com/ericmunozdev/ordenaarchivos.git
+cd ordenaarchivos
+```
+
+### 2. Crear y activar el entorno virtual
+
+```bash
+python -m venv env
+```
+
+**Windows**
+
+```powershell
 .\env\Scripts\activate
 ```
 
-Para guardar el listado de modulos desde el entorno virtual
-```
-pip freeze > requirements.txt
+**Linux / macOS**
+
+```bash
+source env/bin/activate
 ```
 
-Instalar paquetes desde el listado de modulos
-```
+### 3. Instalar dependencias
+
+```bash
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-Desactivar el entorno virtual
+> `requirements.txt` está guardado en **UTF-16**. Si `pip` falla por codificación, conviértelo a UTF-8 antes de instalar.
+
+### 4. Ejecutar
+
+```bash
+python src/main.py
 ```
-deactivate
+
+---
+
+## Uso
+
+### Modo menú (recomendado)
+
+```bash
+python src/main.py
 ```
+
+El programa muestra las acciones disponibles, solicita una opción y luego pide el directorio a procesar. La ruta se valida antes de ejecutar cualquier cambio.
+
+```text
+Seleccione una acción:
+
+1. normaliza_nombre_archivos
+2. reemplaza_nombre_archivos
+3. separa_archivos_carpetas
+...
+
+Opción: 1
+Ingrese el directorio: C:\ruta\a\procesar
+```
+
+### Modo directo
+
+Cada acción puede ejecutarse de forma independiente:
+
+```bash
+python src/acciones/normaliza_nombre_archivos.py
+```
+
+En este modo la acción solicita el directorio por consola y agrega `src/` a `sys.path` para importar `utils.directorios`.
+
+> **Importante:** las acciones renombran y mueven archivos de forma permanente. Prueba primero sobre una copia del directorio.
+
+---
+
+## Desarrollo
+
+### Formato y análisis estático
+
+```bash
+pip install black pylint
+black src/
+pylint src/
+```
+
+### Gestión de dependencias
+
+Listar los paquetes instalados:
+
+```bash
+pip list
+```
+
+Listar los paquetes desactualizados:
+
+```bash
+pip list --outdated
+```
+
+Actualizar el archivo de dependencias desde el entorno virtual:
+
+```bash
+pip freeze > requirements.txt
+```
+
+> En PowerShell, la redirección `>` puede guardar el archivo en UTF-16. Si migras `requirements.txt` a UTF-8, actualiza también la nota de codificación de la sección de instalación.
+
+---
+
+## Decisiones de diseño
+
+- **Plugins auto-registrados:** agregar una acción consiste en crear un módulo en `acciones/` con una función `ejecutar`; el menú se actualiza solo.
+- **Acciones independientes:** cada módulo es ejecutable por separado, lo que facilita probar una acción sin cargar el menú completo.
+- **Validación centralizada:** la comprobación del directorio vive en `utils/directorios.py` y es compartida por todas las acciones.
+- **Sin `os.chdir`:** se trabaja con `pathlib.Path` y rutas absolutas para evitar estado global compartido.
+- **Operaciones seguras:** se controlan los nombres ocupados antes de renombrar o mover, evitando sobrescribir archivos.
+- **Separación de responsabilidades:** el menú orquesta, las acciones procesan y las utilidades validan.
+
+---
+
+## Convenciones del código
+
+- **Docstrings** en módulos y funciones públicas.
+- **snake_case** para módulos, funciones y variables.
+- **Black** como formateador oficial.
+- Cada acción expone `ejecutar(rutadirectorio)` y puede ejecutarse con `python src/acciones/<accion>.py`.
+- Mensajes de consola en español y errores informados sin interrumpir el procesamiento del resto de los archivos.
+
+---
+
+## Estado del proyecto
+
+- [x] Menú interactivo con carga dinámica de acciones.
+- [x] Validación reutilizable del directorio.
+- [x] Normalización de nombres con múltiples formatos.
+- [x] Reemplazo de texto en nombres de archivos.
+- [x] Separación de archivos en carpetas por lotes.
+- [x] Extracción de texto a `output.txt`.
+- [x] Renombrado de imágenes por fecha.
+- [x] Detección de videos repetidos por hash perceptual.
+- [x] Renombrado de música por metadatos.
+- [ ] Pruebas automatizadas.
+- [ ] Modo simulación (*dry run*) para previsualizar cambios.
+- [ ] Registro de operaciones y opción de deshacer.
+- [ ] Empaquetado como CLI instalable (`pipx` / `pyproject.toml`).
