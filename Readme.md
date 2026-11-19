@@ -153,19 +153,25 @@ cd ordenaarchivos
 ### 2. Crear y activar el entorno virtual
 
 ```bash
-python -m venv env
+python -m venv venv
 ```
 
 **Windows**
 
 ```powershell
-.\env\Scripts\activate
+.\venv\Scripts\activate
 ```
 
 **Linux / macOS**
 
 ```bash
-source env/bin/activate
+source venv/bin/activate
+```
+
+Para salir del entorno virtual:
+
+```bash
+deactivate
 ```
 
 ### 3. Instalar dependencias
@@ -175,7 +181,7 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-> `requirements.txt` está guardado en **UTF-16**. Si `pip` falla por codificación, conviértelo a UTF-8 antes de instalar.
+> `requirements.txt` está guardado en **UTF-8**.
 
 ### 4. Ejecutar
 
@@ -223,10 +229,12 @@ En este modo la acción solicita el directorio por consola y agrega `src/` a `sy
 
 ## Desarrollo
 
+> Ejecuta todos los comandos con el entorno virtual `venv` activado.
+
 ### Formato y análisis estático
 
 ```bash
-pip install black pylint
+python -m pip install black pylint
 black src/
 pylint src/
 ```
@@ -245,13 +253,33 @@ Listar los paquetes desactualizados:
 pip list --outdated
 ```
 
-Actualizar el archivo de dependencias desde el entorno virtual:
+Generar o actualizar `requirements.txt` desde el entorno virtual:
 
 ```bash
 pip freeze > requirements.txt
 ```
 
-> En PowerShell, la redirección `>` puede guardar el archivo en UTF-16. Si migras `requirements.txt` a UTF-8, actualiza también la nota de codificación de la sección de instalación.
+> En PowerShell el operador `>` guarda en UTF-16. Para forzar UTF-8 de forma explícita:
+> `pip freeze | Set-Content -Encoding utf8 requirements.txt`
+
+> Mantén `requirements.txt` en UTF-8: en PowerShell 5.1 usa `Set-Content -Encoding utf8` en lugar de `>` para no generar UTF-16.
+
+### Pruebas
+
+Esquema previsto (aún no hay casos de prueba):
+
+```bash
+python -m pip install pytest
+python -m pytest -v
+```
+
+Alternativa con la biblioteca estándar, sin dependencias extra:
+
+```bash
+python -m unittest discover -v
+```
+
+> Por convención, los tests se ubicarán en `tests/`. Mientras no existan, los comandos terminan sin ejecutar casos.
 
 ---
 
