@@ -97,7 +97,7 @@ renombrar / mover / extraer texto
 | `separa_archivos_carpetas` | Agrupa los archivos en carpetas de N archivos, nombradas con timestamp. |
 | `obtiene_texto_archivos` | Extrae el contenido de los archivos a un `output.txt`, omitiendo binarios. |
 | `renombra_imagenes_fecha` | Renombra imágenes a `YYYYMMDD_hhmmss.ext` usando la fecha más antigua del archivo. |
-| `renombra_videos_repetidos` | Detecta videos duplicados comparando el hash perceptual del primer frame y antepone `_repeat_YYYYMMDDHHMMSSmmm_<n>_` a todos los archivos del grupo. |
+| `renombra_videos_repetidos` | Detecta videos repetidos comparando hashes perceptuales de varios frames y antepone `_repeat_YYYYMMDDHHMMSSmmm_<n>_` a todos los archivos del grupo. |
 | `renombra_musica_metadata` | Renombra MP3 agregando al nombre los tags título, artista, año y género. |
 | `renombra_archivos_carpeta` | Agrega el nombre de la carpeta contenedora como prefijo a cada archivo, de forma recursiva e idempotente. |
 
@@ -105,7 +105,7 @@ renombrar / mover / extraer texto
 
 - **Colisiones:** al renombrar o mover archivos se verifica que el nombre destino no exista; de ser necesario se agrega un contador (`_1`, `_2`, ...).
 - **Imágenes:** se consideran las extensiones `.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.webp`, `.tiff`, `.tif` y `.heic`.
-- **Videos:** se consideran las extensiones `.mp4`, `.avi`, `.mkv` y `.mov`. Los grupos duplicados se marcan con `_repeat_YYYYMMDDHHMMSSmmm_<n>_` conservando el nombre original; el índice sigue el orden por tamaño descendente y los archivos ya marcados con `_repeat_` se omiten.
+- **Videos:** se consideran las extensiones `.mp4`, `.avi`, `.mkv` y `.mov`. Se muestrean varios frames desde el inicio para reducir falsos positivos y permitir coincidencias cuando un video tiene final agregado. Los grupos repetidos se marcan con `_repeat_YYYYMMDDHHMMSSmmm_<n>_` conservando el nombre original; el índice sigue el orden por tamaño descendente y los archivos ya marcados con `_repeat_` se omiten.
 - **Música:** los archivos que fallan al procesarse se marcan con el prefijo `_error_` y se registran en `errores.txt`.
 - **Prefijo por carpeta:** el nombre de la carpeta se limpia a minúsculas, se eliminan caracteres inválidos y se reemplazan espacios por `_`. Si el nombre queda vacío se usa `sin_nombre`. Los archivos que ya tienen el prefijo se omiten para evitar duplicarlo en ejecuciones sucesivas.
 - **Texto:** si un archivo no se puede leer como UTF-8 se intenta con latin-1; los archivos con bytes nulos se omiten.

@@ -1,4 +1,4 @@
-"""Renombra videos repetidos usando el hash de la primera imagen como referencia."""
+"""Renombra videos repetidos usando el hash de varios frames como referencia."""
 
 import re
 import sys
@@ -17,29 +17,51 @@ from utils.directorios import pedir_directorio
 
 VIDEO_EXTENSIONS = (".mp4", ".avi", ".mkv", ".mov")
 REPEAT_PREFIX_PATTERN = re.compile(r"^_repeat_\d{17}_\d+_")
+FRAME_SAMPLE_SECONDS = (0, 1, 2, 3, 4)
+MIN_FRAMES = 3
+FRAME_HASH_THRESHOLD = 5
 
 
-def get_first_frame(video_path):
-    """Obtiene el primer frame de un video como imagen PIL."""
+def get_frame_hashes(video_path):
+    """Obtiene hashes perceptuales de varios frames del video."""
 
     cap = cv2.VideoCapture(str(video_path))
+    hashes = []
 
     try:
-        success, frame = cap.read()
+        fps = cap.get(cv2.CAP_PROP_FPS) or 0
+        frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0
 
-        if not success:
-            return None
+        for second in FRAME_SAMPLE_SECONDS:
+            frame = None
 
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        return Image.fromarray(frame_rgb)
+            if fps > 0:
+                cap.set(cv2.CAP_PROP_POS_MSEC, second * 1000)
+                success, frame = cap.read()
+                if not success:
+                    frame = None
+
+            if frame is None and frame_count > 0 and fps > 0:
+                frame_index = min(int(second * fps), int(frame_count) - 1)
+                cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
+                success, frame = cap.read()
+                if not success:
+                    frame = None
+
+            if frame is None and second == 0:
+                success, frame = cap.read()
+                if not success:
+                    frame = None
+
+            if frame is None:
+                continue
+
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            hashes.append(imagehash.phash(Image.fromarray(frame_rgb)))
+
+        return hashes
     finally:
         cap.release()
-
-
-def generate_phash(image):
-    """Genera un hash perceptual (phash) para la imagen."""
-
-    return imagehash.phash(image)
 
 
 def ya_tiene_prefijo_repeat(nombre):
@@ -55,6 +77,47 @@ def generar_prefijo_repeat():
     return f"_repeat_{timestamp}_"
 
 
+def son_videos_repetidos(hashes_a, hashes_b):
+    """Compara firmas de hashes permitiendo que uno tenga final adicional."""
+
+    cantidad = min(len(hashes_a), len(hashes_b))
+
+    if cantidad < MIN_FRAMES:
+        return False
+
+    for hash_a, hash_b in zip(hashes_a[:cantidad], hashes_b[:cantidad]):
+        if hash_a - hash_b > FRAME_HASH_THRESHOLD:
+            return False
+
+    return True
+
+
+def agrupar_videos_repetidos(data):
+    """Agrupa videos repetidos comparando firmas de varios frames."""
+
+    grupos = []
+    asignados = set()
+
+    for i, item in enumerate(data):
+        if i in asignados:
+            continue
+
+        grupo = [item]
+        asignados.add(i)
+
+        for j in range(i + 1, len(data)):
+            if j in asignados:
+                continue
+
+            if son_videos_repetidos(item["hashes"], data[j]["hashes"]):
+                grupo.append(data[j])
+                asignados.add(j)
+
+        grupos.append(grupo)
+
+    return grupos
+
+
 def collect_video_data(rutadirectorio):
     """Recopila datos de los videos."""
 
@@ -68,19 +131,18 @@ def collect_video_data(rutadirectorio):
         if archivo.suffix.lower() not in VIDEO_EXTENSIONS:
             continue
 
-        frame = get_first_frame(archivo)
-        if frame is None:
-            print(f"No se pudo leer: {archivo.name}")
+        hashes = get_frame_hashes(archivo)
+        if len(hashes) < MIN_FRAMES:
+            print(f"No se pudieron leer suficientes frames: {archivo.name}")
             continue
 
-        phash = str(generate_phash(frame))
         size = archivo.stat().st_size
 
         data.append(
             {
                 "filename": archivo.name,
                 "path": archivo,
-                "hash": phash,
+                "hashes": hashes,
                 "size": size,
             }
         )
@@ -94,16 +156,13 @@ def renombra_videos_repetidos(rutadirectorio):
     ruta = Path(rutadirectorio)
     data = collect_video_data(ruta)
 
-    # Agrupar por hash
-    groups = defaultdict(list)
-    for item in data:
-        groups[item["hash"]].append(item)
+    groups = agrupar_videos_repetidos(data)
 
     # Nombres ocupados para evitar colisiones
     ocupados = {f.name for f in ruta.iterdir() if f.is_file()}
 
     # Procesar cada grupo
-    for items in groups.values():
+    for items in groups:
         # Los grupos de un solo elemento no tienen repetidos
         if len(items) < 2:
             continue
@@ -136,7 +195,7 @@ def renombra_videos_repetidos(rutadirectorio):
 
             try:
                 vieja_ruta.rename(nueva_ruta)
-            except Exception as e:
+            except OSError as e:
                 print(f"Error al renombrar '{item['filename']}': {e}")
                 continue
 
