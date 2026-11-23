@@ -99,6 +99,7 @@ renombrar / mover / extraer texto
 | `renombra_imagenes_fecha` | Renombra imágenes a `YYYYMMDD_hhmmss.ext` usando la fecha más antigua del archivo. |
 | `renombra_videos_repetidos` | Detecta videos duplicados comparando el hash perceptual del primer frame y agrega sufijos `_1`, `_2`, etc. |
 | `renombra_musica_metadata` | Renombra MP3 agregando al nombre los tags título, artista, año y género. |
+| `renombra_archivos_carpeta` | Agrega el nombre de la carpeta contenedora como prefijo a cada archivo, de forma recursiva e idempotente. |
 
 ### Detalles relevantes
 
@@ -106,6 +107,7 @@ renombrar / mover / extraer texto
 - **Imágenes:** se consideran las extensiones `.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.webp`, `.tiff`, `.tif` y `.heic`.
 - **Videos:** se consideran las extensiones `.mp4`, `.avi`, `.mkv` y `.mov`. El archivo de mayor tamaño conserva su nombre y los demás se renombran a partir de él.
 - **Música:** los archivos que fallan al procesarse se marcan con el prefijo `_error_` y se registran en `errores.txt`.
+- **Prefijo por carpeta:** el nombre de la carpeta se limpia a minúsculas, se eliminan caracteres inválidos y se reemplazan espacios por `_`. Si el nombre queda vacío se usa `sin_nombre`. Los archivos que ya tienen el prefijo se omiten para evitar duplicarlo en ejecuciones sucesivas.
 - **Texto:** si un archivo no se puede leer como UTF-8 se intenta con latin-1; los archivos con bytes nulos se omiten.
 
 ---
@@ -124,7 +126,8 @@ ordenaarchivos/
 │   │   ├── obtiene_texto_archivos.py
 │   │   ├── renombra_imagenes_fecha.py
 │   │   ├── renombra_videos_repetidos.py
-│   │   └── renombra_musica_metadata.py
+│   │   ├── renombra_musica_metadata.py
+│   │   └── renombra_archivos_carpeta.py
 │   └── utils/
 │       ├── __init__.py
 │       └── directorios.py                 # Validación del directorio
@@ -315,6 +318,7 @@ python -m unittest discover -v
 - [x] Renombrado de imágenes por fecha.
 - [x] Detección de videos repetidos por hash perceptual.
 - [x] Renombrado de música por metadatos.
+- [x] Renombrado de archivos con prefijo de carpeta.
 - [ ] Pruebas automatizadas.
 - [ ] Modo simulación (*dry run*) para previsualizar cambios.
 - [ ] Registro de operaciones y opción de deshacer.
