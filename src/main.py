@@ -36,18 +36,24 @@ def main():
     mostrar_menu()
     opcion = input("\nOpción: ").strip()
 
-    directorio = pedir_directorio()
-
     try:
-        opcion = int(opcion) - 1
-        key = list(ACCIONES.keys())[opcion]
-
-        print(f"\nEjecutando: {key}\n")
-
-        ACCIONES[key](directorio)
-
-    except (ValueError, IndexError):
+        indice = int(opcion) - 1
+    except ValueError:
         print("Opción no válida")
+        return
+
+    claves = list(ACCIONES.keys())
+
+    if not 0 <= indice < len(claves):
+        print("Opción no válida")
+        return
+
+    directorio = pedir_directorio()
+    key = claves[indice]
+
+    print(f"\nEjecutando: {key}\n")
+
+    ACCIONES[key](directorio)
 
 if __name__ == "__main__":
     main()

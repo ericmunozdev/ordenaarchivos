@@ -113,7 +113,12 @@ def renombra_videos_repetidos(rutadirectorio):
             vieja_ruta = Path(item["path"])
             nueva_ruta = ruta / nuevo_nombre
 
-            vieja_ruta.rename(nueva_ruta)
+            try:
+                vieja_ruta.rename(nueva_ruta)
+            except Exception as e:
+                print(f"Error al renombrar '{item['filename']}': {e}")
+                continue
+
             ocupados.discard(item["filename"])
             ocupados.add(nuevo_nombre)
             print(f"{item['filename']} --> {nuevo_nombre}")
