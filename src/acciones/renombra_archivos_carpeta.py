@@ -42,7 +42,10 @@ def obtener_nombre_unico(ruta_carpeta, nombre, ocupados, archivo=None):
     contador = 1
 
     while nombre in ocupados:
-        if archivo is not None and (ruta_carpeta / nombre).resolve() == archivo.resolve():
+        if (
+            archivo is not None
+            and (ruta_carpeta / nombre).resolve() == archivo.resolve()
+        ):
             break
 
         nombre = f"{base}_{contador}{extension}"
