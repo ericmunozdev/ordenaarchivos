@@ -1,0 +1,134 @@
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Día 1 de cada mes a las 06:17 UTC (minuto no redondo para evitar colas).
+    - cron: '17 6 1 * *'
+
+permissions:
+  contents: read
+
+jobs:
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: python
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v4
+        with:
+          fail-on: none
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Install pip-audit
+        run: python -m pip install pip-audit
+
+      - name: List vulnerable packages
+        shell: bash
+        run: |
+          pip-audit -r requirements.txt --format json > pip-audit.json || true
+          node <<'NODE'
+          const fs = require('node:fs');
+          let report = {};
+          try {
+            report = JSON.parse(fs.readFileSync('pip-audit.json', 'utf8'));
+          } catch {
+            fs.appendFileSync(
+              process.env.GITHUB_STEP_SUMMARY,
+              '### pip-audit\n\nNo se pudo interpretar el informe JSON.\n'
+            );
+            process.exit(0);
+          }
+          const counts = {};
+          for (const vuln of report.vulnerabilities ?? []) {
+            const severity = (vuln.severity ?? 'unknown').toLowerCase();
+            counts[severity] = (counts[severity] ?? 0) + 1;
+          }
+          const rows = ['critical', 'high', 'moderate', 'low'].map(
+            (severity) => `| ${severity} | ${counts[severity] ?? 0} |`
+          );
+          fs.appendFileSync(
+            process.env.GITHUB_STEP_SUMMARY,
+            ['### pip-audit', '', '| Severidad | Número |', '| --- | ---: |', ...rows, ''].join('\n')
+          );
+          NODE
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pip-audit
+          path: pip-audit.json
+          if-no-files-found: warn
+
+  ci:
+    name: Lint and smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt black pylint
+
+      - name: Check formatting with Black
+        run: black --check src/
+
+      - name: Lint with Pylint
+        continue-on-error: true
+        run: pylint src/
+
+      - name: Smoke test
+        shell: bash
+        run: |
+          python -c "import cv2, numpy, PIL, imagehash, mutagen, pywt, scipy; print('Dependencias importadas correctamente.')"
+          if [ -d tests ]; then
+            python -m pip install pytest
+            python -m pytest -v
+          else
+            echo "No hay directorio tests/; se omiten las pruebas."
+            echo "### Tests" >> "$GITHUB_STEP_SUMMARY"
+            echo "Omitidos: no existe el directorio tests/." >> "$GITHUB_STEP_SUMMARY"
+          fi

@@ -112,6 +112,15 @@ renombrar / mover / extraer texto
 
 ---
 
+## Seguridad y CI
+
+- **CodeQL**: análisis estático de Python en PRs, push a `main` y ejecución mensual.
+- **Dependabot**: actualizaciones mensuales de paquetes `pip` y de GitHub Actions, además de alertas de seguridad.
+- **Auditoría de dependencias**: `pip-audit -r requirements.txt` se ejecuta en el workflow de seguridad y deja el informe JSON como artifact/resumen.
+- **CI**: verificación de formato con Black, Pylint y prueba de importación de dependencias en GitHub Actions, con permisos mínimos por job.
+
+---
+
 ## Estructura del repositorio
 
 ```text
@@ -131,6 +140,10 @@ ordenaarchivos/
 │   └── utils/
 │       ├── __init__.py
 │       └── directorios.py                 # Validación del directorio
+├── .github/
+│   ├── dependabot.yml
+│   └── workflows/
+│       └── security.yml
 ├── .gitignore
 ├── .pylintrc
 ├── requirements.txt
@@ -319,6 +332,7 @@ python -m unittest discover -v
 - [x] Detección de videos repetidos por hash perceptual.
 - [x] Renombrado de música por metadatos.
 - [x] Renombrado de archivos con prefijo de carpeta.
+- [x] CodeQL, Dependabot y auditoría `pip` en GitHub Actions.
 - [ ] Pruebas automatizadas.
 - [ ] Modo simulación (*dry run*) para previsualizar cambios.
 - [ ] Registro de operaciones y opción de deshacer.
