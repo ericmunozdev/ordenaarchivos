@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from utils.directorios import pedir_directorio  # pylint: disable=wrong-import-position
 
+
 def transformar_texto(texto, formato):
     """Aplica el estilo de Case seleccionado al cuerpo del nombre del archivo."""
 

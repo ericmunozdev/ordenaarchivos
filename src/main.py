@@ -8,6 +8,7 @@ from utils.directorios import pedir_directorio
 
 ACCIONES = {}
 
+
 def cargar_acciones():
     """Carga desde el paquete 'acciones'."""
 
@@ -17,12 +18,14 @@ def cargar_acciones():
         if hasattr(modulo, "ejecutar"):
             ACCIONES[module_name] = modulo.ejecutar
 
+
 def mostrar_menu():
     """Muestra el menú de acciones."""
 
     print("\nSeleccione una acción:\n")
     for i, key in enumerate(ACCIONES.keys(), start=1):
         print(f"{i}. {key}")
+
 
 def main():
     """Función principal del programa."""
@@ -54,6 +57,7 @@ def main():
     print(f"\nEjecutando: {key}\n")
 
     ACCIONES[key](directorio)
+
 
 if __name__ == "__main__":
     main()
