@@ -3,7 +3,6 @@
 import re
 import sys
 import time
-from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
@@ -13,7 +12,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from utils.directorios import pedir_directorio
+from utils.directorios import pedir_directorio  # pylint: disable=wrong-import-position
 
 VIDEO_EXTENSIONS = (".mp4", ".avi", ".mkv", ".mov")
 REPEAT_PREFIX_PATTERN = re.compile(r"^_repeat_\d{17}_\d+_")

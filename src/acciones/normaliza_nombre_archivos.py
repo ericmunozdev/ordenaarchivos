@@ -6,8 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from utils.directorios import pedir_directorio
-
+from utils.directorios import pedir_directorio  # pylint: disable=wrong-import-position
 
 def transformar_texto(texto, formato):
     """Aplica el estilo de Case seleccionado al cuerpo del nombre del archivo."""
@@ -67,7 +66,7 @@ def normaliza_nombre_archivos(rutadirectorio, formato):
             ocupados.discard(archivo.name)
             ocupados.add(nuevo_nombre)
             print(f"{archivo.name}  --->  {nuevo_nombre}")
-        except Exception as e:
+        except OSError as e:
             print(f"Error al renombrar '{archivo.name}': {e}")
 
 

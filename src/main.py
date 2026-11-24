@@ -1,9 +1,9 @@
 """Module providing a function to execute the main program logic."""
 
-import pkgutil
 import importlib
-import acciones
+import pkgutil
 
+import acciones
 from utils.directorios import pedir_directorio
 
 ACCIONES = {}
@@ -11,7 +11,7 @@ ACCIONES = {}
 def cargar_acciones():
     """Carga desde el paquete 'acciones'."""
 
-    for loader, module_name, is_pkg in pkgutil.iter_modules(acciones.__path__):
+    for _, module_name, _ in pkgutil.iter_modules(acciones.__path__):
         modulo = importlib.import_module(f"acciones.{module_name}")
 
         if hasattr(modulo, "ejecutar"):

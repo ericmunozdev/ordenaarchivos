@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from utils.directorios import pedir_directorio
+from utils.directorios import pedir_directorio  # pylint: disable=wrong-import-position
 
 
 def generar_nombre_carpeta():
@@ -50,7 +50,7 @@ def separa_archivos_carpetas(rutadirectorio, cantidad):
             try:
                 shutil.move(archivo, ruta_carpeta / archivo.name)
                 print(f"Moviendo '{archivo.name}' a '{ruta_carpeta}'")
-            except Exception as e:
+            except (OSError, shutil.Error) as e:
                 print(f"Error al mover '{archivo.name}': {e}")
 
 

@@ -5,11 +5,11 @@ import re
 import sys
 from pathlib import Path
 
+from mutagen.easyid3 import EasyID3
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from utils.directorios import pedir_directorio
-
-from mutagen.easyid3 import EasyID3
+from utils.directorios import pedir_directorio  # pylint: disable=wrong-import-position
 
 
 MUSIC_EXTENSIONS = (".mp3",)
@@ -21,7 +21,7 @@ def extrae_metadata_con_tags(ruta_archivo):
 
     try:
         tags = EasyID3(ruta_archivo)
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         tags = None
 
     def obtener(clave):
@@ -109,7 +109,7 @@ def marcar_archivo_error(ruta_carpeta, archivo):
         archivo.rename(ruta_carpeta / nombre_error)
         print(f"[ERROR MARK] {archivo.name} -> {nombre_error}")
         return nombre_error
-    except Exception as e:
+    except OSError as e:
         print(f"No se pudo marcar como error '{archivo.name}': {e}")
         return None
 
@@ -138,7 +138,7 @@ def procesar_archivo(file_path: Path):
         print(f"[OK] {original_name} -> {nuevo_nombre}")
         return ("ok", original_name, nuevo_nombre)
 
-    except Exception as e:
+    except OSError as e:
         marcar_archivo_error(file_path.parent, file_path)
         print(f"[ERROR] {original_name}: {e}")
         return ("error", original_name, str(e))
@@ -155,7 +155,7 @@ def escribir_log_errores(ruta, errores):
                 log.write(f"{original}: {mensaje}\n")
 
         print(f"Log de errores: {ruta_log}")
-    except Exception as e:
+    except OSError as e:
         print(f"No se pudo escribir el log de errores: {e}")
 
 

@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from utils.directorios import pedir_directorio
+from utils.directorios import pedir_directorio  # pylint: disable=wrong-import-position
 
 
 def reemplaza_nombre_archivos(rutadirectorio, texto_reemplazar, texto_reemplazo):
@@ -36,7 +36,7 @@ def reemplaza_nombre_archivos(rutadirectorio, texto_reemplazar, texto_reemplazo)
             ocupados.discard(archivo.name)
             ocupados.add(nuevo_nombre)
             print(f"{archivo.name}  --->  {nuevo_nombre}")
-        except Exception as e:
+        except OSError as e:
             print(f"Error al renombrar '{archivo.name}': {e}")
 
 

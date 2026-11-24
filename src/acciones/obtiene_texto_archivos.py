@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from utils.directorios import pedir_directorio
+from utils.directorios import pedir_directorio  # pylint: disable=wrong-import-position
 
 
 def leer_archivo(ruta):
@@ -60,7 +60,7 @@ def obtiene_texto_archivos(rutadirectorio, rutasalida):
 
             lineas.append(f"# {archivo.name}")
             lineas.extend(contenido)
-        except Exception as e:
+        except OSError as e:
             print(f"Error leyendo '{archivo.name}': {e}")
 
     crea_archivo_salida(rutasalida, lineas)
