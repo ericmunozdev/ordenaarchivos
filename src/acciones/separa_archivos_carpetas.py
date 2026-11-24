@@ -38,9 +38,7 @@ def separa_archivos_carpetas(rutadirectorio, cantidad):
     for i in range(0, len(archivos), cantidad):
         lote = archivos[i : i + cantidad]
 
-        nombre_carpeta = obtener_nombre_carpeta_unico(
-            ruta, generar_nombre_carpeta()
-        )
+        nombre_carpeta = obtener_nombre_carpeta_unico(ruta, generar_nombre_carpeta())
         ruta_carpeta = ruta / nombre_carpeta
 
         ruta_carpeta.mkdir()

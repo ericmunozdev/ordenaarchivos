@@ -11,7 +11,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from utils.directorios import pedir_directorio  # pylint: disable=wrong-import-position
 
-
 MUSIC_EXTENSIONS = (".mp3",)
 ERROR_PREFIX = "_error_"
 
