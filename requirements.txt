@@ -1,5 +1,5 @@
 ImageHash==4.3.2
-mutagen==1.47.0
+mutagen==1.48.1
 numpy==2.5.5
 opencv-python==5.1.0.95
 pillow==13.0.0
